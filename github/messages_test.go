@@ -195,6 +195,10 @@ func TestParseWebHook(t *testing.T) {
 			messageType: "commit_comment",
 		},
 		{
+			payload:     &ContentReferenceEvent{},
+			messageType: "content_reference",
+		},
+		{
 			payload:     &CreateEvent{},
 			messageType: "create",
 		},
@@ -218,6 +222,10 @@ func TestParseWebHook(t *testing.T) {
 		{
 			payload:     &ForkEvent{},
 			messageType: "fork",
+		},
+		{
+			payload:     &GitHubAppAuthorizationEvent{},
+			messageType: "github_app_authorization",
 		},
 		{
 			payload:     &GollumEvent{},
@@ -270,6 +278,10 @@ func TestParseWebHook(t *testing.T) {
 		{
 			payload:     &OrgBlockEvent{},
 			messageType: "org_block",
+		},
+		{
+			payload:     &PackageEvent{},
+			messageType: "package",
 		},
 		{
 			payload:     &PageBuildEvent{},
@@ -340,8 +352,24 @@ func TestParseWebHook(t *testing.T) {
 			messageType: "team_add",
 		},
 		{
+			payload:     &UserEvent{},
+			messageType: "user",
+		},
+		{
 			payload:     &WatchEvent{},
 			messageType: "watch",
+		},
+		{
+			payload:     &RepositoryDispatchEvent{},
+			messageType: "repository_dispatch",
+		},
+		{
+			payload:     &WorkflowDispatchEvent{},
+			messageType: "workflow_dispatch",
+		},
+		{
+			payload:     &WorkflowRunEvent{},
+			messageType: "workflow_run",
 		},
 	}
 

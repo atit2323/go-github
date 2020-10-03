@@ -10,7 +10,7 @@ import "context"
 // ActivityService handles communication with the activity related
 // methods of the GitHub API.
 //
-// GitHub API docs: https://developer.github.com/v3/activity/
+// GitHub API docs: https://docs.github.com/en/rest/reference/activity/
 type ActivityService service
 
 // FeedLink represents a link to a related resource.
@@ -29,13 +29,13 @@ type Feeds struct {
 	CurrentUserOrganizationURL  *string  `json:"current_user_organization_url,omitempty"`
 	CurrentUserOrganizationURLs []string `json:"current_user_organization_urls,omitempty"`
 	Links                       *struct {
-		Timeline                 *FeedLink  `json:"timeline,omitempty"`
-		User                     *FeedLink  `json:"user,omitempty"`
-		CurrentUserPublic        *FeedLink  `json:"current_user_public,omitempty"`
-		CurrentUser              *FeedLink  `json:"current_user,omitempty"`
-		CurrentUserActor         *FeedLink  `json:"current_user_actor,omitempty"`
-		CurrentUserOrganization  *FeedLink  `json:"current_user_organization,omitempty"`
-		CurrentUserOrganizations []FeedLink `json:"current_user_organizations,omitempty"`
+		Timeline                 *FeedLink   `json:"timeline,omitempty"`
+		User                     *FeedLink   `json:"user,omitempty"`
+		CurrentUserPublic        *FeedLink   `json:"current_user_public,omitempty"`
+		CurrentUser              *FeedLink   `json:"current_user,omitempty"`
+		CurrentUserActor         *FeedLink   `json:"current_user_actor,omitempty"`
+		CurrentUserOrganization  *FeedLink   `json:"current_user_organization,omitempty"`
+		CurrentUserOrganizations []*FeedLink `json:"current_user_organizations,omitempty"`
 	} `json:"_links,omitempty"`
 }
 

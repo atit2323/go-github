@@ -14,6 +14,52 @@ import (
 	"testing"
 )
 
+func TestOrganization_marshal(t *testing.T) {
+	testJSONMarshal(t, &Organization{}, "{}")
+
+	o := &Organization{
+		BillingEmail:                         String("support@github.com"),
+		Blog:                                 String("https://github.com/blog"),
+		Company:                              String("GitHub"),
+		Email:                                String("support@github.com"),
+		TwitterUsername:                      String("github"),
+		Location:                             String("San Francisco"),
+		Name:                                 String("github"),
+		Description:                          String("GitHub, the company."),
+		IsVerified:                           Bool(true),
+		HasOrganizationProjects:              Bool(true),
+		HasRepositoryProjects:                Bool(true),
+		DefaultRepoPermission:                String("read"),
+		MembersCanCreateRepos:                Bool(true),
+		MembersCanCreateInternalRepos:        Bool(true),
+		MembersCanCreatePrivateRepos:         Bool(true),
+		MembersCanCreatePublicRepos:          Bool(false),
+		MembersAllowedRepositoryCreationType: String("all"),
+	}
+	want := `
+		{
+			"billing_email": "support@github.com",
+			"blog": "https://github.com/blog",
+			"company": "GitHub",
+			"email": "support@github.com",
+			"twitter_username": "github",
+			"location": "San Francisco",
+			"name": "github",
+			"description": "GitHub, the company.",
+			"is_verified": true,
+			"has_organization_projects": true,
+			"has_repository_projects": true,
+			"default_repository_permission": "read",
+			"members_can_create_repositories": true,
+			"members_can_create_public_repositories": false,
+			"members_can_create_private_repositories": true,
+			"members_can_create_internal_repositories": true,
+			"members_allowed_repository_creation_type": "all"
+		}
+	`
+	testJSONMarshal(t, o, want)
+}
+
 func TestOrganizationsService_ListAll(t *testing.T) {
 	client, mux, _, teardown := setup()
 	defer teardown()
@@ -146,6 +192,7 @@ func TestOrganizationsService_Edit(t *testing.T) {
 		v := new(Organization)
 		json.NewDecoder(r.Body).Decode(v)
 
+		testHeader(t, r, "Accept", mediaTypeMemberAllowedRepoCreationTypePreview)
 		testMethod(t, r, "PATCH")
 		if !reflect.DeepEqual(v, input) {
 			t.Errorf("Request body = %+v, want %+v", v, input)
@@ -179,7 +226,6 @@ func TestOrganizationsService_ListInstallations(t *testing.T) {
 
 	mux.HandleFunc("/orgs/o/installations", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		testHeader(t, r, "Accept", mediaTypeIntegrationPreview)
 		fmt.Fprint(w, `{"total_count": 1, "installations": [{ "id": 1, "app_id": 5}]}`)
 	})
 
@@ -209,7 +255,6 @@ func TestOrganizationsService_ListInstallations_withListOptions(t *testing.T) {
 
 	mux.HandleFunc("/orgs/o/installations", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		testHeader(t, r, "Accept", mediaTypeIntegrationPreview)
 		testFormValues(t, r, values{"page": "2"})
 		fmt.Fprint(w, `{"total_count": 2, "installations": [{ "id": 2, "app_id": 10}]}`)
 	})

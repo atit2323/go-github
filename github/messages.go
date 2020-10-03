@@ -44,12 +44,14 @@ var (
 		"check_run":                      "CheckRunEvent",
 		"check_suite":                    "CheckSuiteEvent",
 		"commit_comment":                 "CommitCommentEvent",
+		"content_reference":              "ContentReferenceEvent",
 		"create":                         "CreateEvent",
 		"delete":                         "DeleteEvent",
 		"deploy_key":                     "DeployKeyEvent",
 		"deployment":                     "DeploymentEvent",
 		"deployment_status":              "DeploymentStatusEvent",
 		"fork":                           "ForkEvent",
+		"github_app_authorization":       "GitHubAppAuthorizationEvent",
 		"gollum":                         "GollumEvent",
 		"installation":                   "InstallationEvent",
 		"installation_repositories":      "InstallationRepositoriesEvent",
@@ -63,6 +65,7 @@ var (
 		"milestone":                      "MilestoneEvent",
 		"organization":                   "OrganizationEvent",
 		"org_block":                      "OrgBlockEvent",
+		"package":                        "PackageEvent",
 		"page_build":                     "PageBuildEvent",
 		"ping":                           "PingEvent",
 		"project":                        "ProjectEvent",
@@ -74,13 +77,17 @@ var (
 		"pull_request":                   "PullRequestEvent",
 		"push":                           "PushEvent",
 		"repository":                     "RepositoryEvent",
+		"repository_dispatch":            "RepositoryDispatchEvent",
 		"repository_vulnerability_alert": "RepositoryVulnerabilityAlertEvent",
 		"release":                        "ReleaseEvent",
 		"star":                           "StarEvent",
 		"status":                         "StatusEvent",
 		"team":                           "TeamEvent",
 		"team_add":                       "TeamAddEvent",
+		"user":                           "UserEvent",
 		"watch":                          "WatchEvent",
+		"workflow_dispatch":              "WorkflowDispatchEvent",
+		"workflow_run":                   "WorkflowRunEvent",
 	}
 )
 
@@ -211,14 +218,14 @@ func ValidateSignature(signature string, payload, secretToken []byte) error {
 
 // WebHookType returns the event type of webhook request r.
 //
-// GitHub API docs: https://developer.github.com/v3/repos/hooks/#webhook-headers
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/hooks/#webhook-headers
 func WebHookType(r *http.Request) string {
 	return r.Header.Get(eventTypeHeader)
 }
 
 // DeliveryID returns the unique delivery ID of webhook request r.
 //
-// GitHub API docs: https://developer.github.com/v3/repos/hooks/#webhook-headers
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/hooks/#webhook-headers
 func DeliveryID(r *http.Request) string {
 	return r.Header.Get(deliveryIDHeader)
 }

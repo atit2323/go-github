@@ -8,7 +8,6 @@ package github
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -95,10 +94,10 @@ type DismissedReview struct {
 
 // ListIssueEvents lists events for the specified issue.
 //
-// GitHub API docs: https://developer.github.com/v3/issues/events/#list-events-for-an-issue
-func (s *IssuesService) ListIssueEvents(ctx context.Context, owner, repo string, number int, opt *ListOptions) ([]*IssueEvent, *Response, error) {
+// GitHub API docs: https://docs.github.com/en/rest/reference/issues/#list-issue-events
+func (s *IssuesService) ListIssueEvents(ctx context.Context, owner, repo string, number int, opts *ListOptions) ([]*IssueEvent, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/%v/events", owner, repo, number)
-	u, err := addOptions(u, opt)
+	u, err := addOptions(u, opts)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -108,8 +107,7 @@ func (s *IssuesService) ListIssueEvents(ctx context.Context, owner, repo string,
 		return nil, nil, err
 	}
 
-	acceptHeaders := []string{mediaTypeLockReasonPreview, mediaTypeProjectCardDetailsPreview}
-	req.Header.Set("Accept", strings.Join(acceptHeaders, ", "))
+	req.Header.Set("Accept", mediaTypeProjectCardDetailsPreview)
 
 	var events []*IssueEvent
 	resp, err := s.client.Do(ctx, req, &events)
@@ -122,10 +120,10 @@ func (s *IssuesService) ListIssueEvents(ctx context.Context, owner, repo string,
 
 // ListRepositoryEvents lists events for the specified repository.
 //
-// GitHub API docs: https://developer.github.com/v3/issues/events/#list-events-for-a-repository
-func (s *IssuesService) ListRepositoryEvents(ctx context.Context, owner, repo string, opt *ListOptions) ([]*IssueEvent, *Response, error) {
+// GitHub API docs: https://docs.github.com/en/rest/reference/issues/#list-issue-events-for-a-repository
+func (s *IssuesService) ListRepositoryEvents(ctx context.Context, owner, repo string, opts *ListOptions) ([]*IssueEvent, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/events", owner, repo)
-	u, err := addOptions(u, opt)
+	u, err := addOptions(u, opts)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,7 +144,7 @@ func (s *IssuesService) ListRepositoryEvents(ctx context.Context, owner, repo st
 
 // GetEvent returns the specified issue event.
 //
-// GitHub API docs: https://developer.github.com/v3/issues/events/#get-a-single-event
+// GitHub API docs: https://docs.github.com/en/rest/reference/issues/#get-an-issue-event
 func (s *IssuesService) GetEvent(ctx context.Context, owner, repo string, id int64) (*IssueEvent, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/issues/events/%v", owner, repo, id)
 

@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"net/url"
 	"time"
 )
 
@@ -17,20 +16,20 @@ import (
 // Note that it's wrapping a Commit, so author/committer information is in two places,
 // but contain different details about them: in RepositoryCommit "github details", in Commit - "git details".
 type RepositoryCommit struct {
-	NodeID      *string  `json:"node_id,omitempty"`
-	SHA         *string  `json:"sha,omitempty"`
-	Commit      *Commit  `json:"commit,omitempty"`
-	Author      *User    `json:"author,omitempty"`
-	Committer   *User    `json:"committer,omitempty"`
-	Parents     []Commit `json:"parents,omitempty"`
-	HTMLURL     *string  `json:"html_url,omitempty"`
-	URL         *string  `json:"url,omitempty"`
-	CommentsURL *string  `json:"comments_url,omitempty"`
+	NodeID      *string   `json:"node_id,omitempty"`
+	SHA         *string   `json:"sha,omitempty"`
+	Commit      *Commit   `json:"commit,omitempty"`
+	Author      *User     `json:"author,omitempty"`
+	Committer   *User     `json:"committer,omitempty"`
+	Parents     []*Commit `json:"parents,omitempty"`
+	HTMLURL     *string   `json:"html_url,omitempty"`
+	URL         *string   `json:"url,omitempty"`
+	CommentsURL *string   `json:"comments_url,omitempty"`
 
 	// Details about how many changes were made in this commit. Only filled in during GetCommit!
 	Stats *CommitStats `json:"stats,omitempty"`
 	// Details about which files, and how this commit touched. Only filled in during GetCommit!
-	Files []CommitFile `json:"files,omitempty"`
+	Files []*CommitFile `json:"files,omitempty"`
 }
 
 func (r RepositoryCommit) String() string {
@@ -79,9 +78,9 @@ type CommitsComparison struct {
 	BehindBy     *int    `json:"behind_by,omitempty"`
 	TotalCommits *int    `json:"total_commits,omitempty"`
 
-	Commits []RepositoryCommit `json:"commits,omitempty"`
+	Commits []*RepositoryCommit `json:"commits,omitempty"`
 
-	Files []CommitFile `json:"files,omitempty"`
+	Files []*CommitFile `json:"files,omitempty"`
 
 	HTMLURL      *string `json:"html_url,omitempty"`
 	PermalinkURL *string `json:"permalink_url,omitempty"`
@@ -124,10 +123,10 @@ type BranchCommit struct {
 
 // ListCommits lists the commits of a repository.
 //
-// GitHub API docs: https://developer.github.com/v3/repos/commits/#list
-func (s *RepositoriesService) ListCommits(ctx context.Context, owner, repo string, opt *CommitsListOptions) ([]*RepositoryCommit, *Response, error) {
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/#list-commits
+func (s *RepositoriesService) ListCommits(ctx context.Context, owner, repo string, opts *CommitsListOptions) ([]*RepositoryCommit, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/commits", owner, repo)
-	u, err := addOptions(u, opt)
+	u, err := addOptions(u, opts)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -148,8 +147,8 @@ func (s *RepositoriesService) ListCommits(ctx context.Context, owner, repo strin
 
 // GetCommit fetches the specified commit, including all details about it.
 //
-// GitHub API docs: https://developer.github.com/v3/repos/commits/#get-a-single-commit
-// See also: https://developer.github.com/v3/git/commits/#get-a-single-commit provides the same functionality
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/commits/#get-a-single-commit
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/#get-a-commit
 func (s *RepositoriesService) GetCommit(ctx context.Context, owner, repo, sha string) (*RepositoryCommit, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/commits/%v", owner, repo, sha)
 
@@ -168,20 +167,22 @@ func (s *RepositoriesService) GetCommit(ctx context.Context, owner, repo, sha st
 }
 
 // GetCommitRaw fetches the specified commit in raw (diff or patch) format.
-func (s *RepositoriesService) GetCommitRaw(ctx context.Context, owner string, repo string, sha string, opt RawOptions) (string, *Response, error) {
+//
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/#get-a-commit
+func (s *RepositoriesService) GetCommitRaw(ctx context.Context, owner string, repo string, sha string, opts RawOptions) (string, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/commits/%v", owner, repo, sha)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
 		return "", nil, err
 	}
 
-	switch opt.Type {
+	switch opts.Type {
 	case Diff:
 		req.Header.Set("Accept", mediaTypeV3Diff)
 	case Patch:
 		req.Header.Set("Accept", mediaTypeV3Patch)
 	default:
-		return "", nil, fmt.Errorf("unsupported raw type %d", opt.Type)
+		return "", nil, fmt.Errorf("unsupported raw type %d", opts.Type)
 	}
 
 	var buf bytes.Buffer
@@ -196,9 +197,9 @@ func (s *RepositoriesService) GetCommitRaw(ctx context.Context, owner string, re
 // GetCommitSHA1 gets the SHA-1 of a commit reference. If a last-known SHA1 is
 // supplied and no new commits have occurred, a 304 Unmodified response is returned.
 //
-// GitHub API docs: https://developer.github.com/v3/repos/commits/#get-the-sha-1-of-a-commit-reference
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/#get-a-commit
 func (s *RepositoriesService) GetCommitSHA1(ctx context.Context, owner, repo, ref, lastSHA string) (string, *Response, error) {
-	u := fmt.Sprintf("repos/%v/%v/commits/%v", owner, repo, url.QueryEscape(ref))
+	u := fmt.Sprintf("repos/%v/%v/commits/%v", owner, repo, refURLEscape(ref))
 
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
@@ -220,9 +221,8 @@ func (s *RepositoriesService) GetCommitSHA1(ctx context.Context, owner, repo, re
 }
 
 // CompareCommits compares a range of commits with each other.
-// todo: support media formats - https://github.com/google/go-github/issues/6
 //
-// GitHub API docs: https://developer.github.com/v3/repos/commits/#compare-two-commits
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/#compare-two-commits
 func (s *RepositoriesService) CompareCommits(ctx context.Context, owner, repo string, base, head string) (*CommitsComparison, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/compare/%v...%v", owner, repo, base, head)
 
@@ -240,10 +240,42 @@ func (s *RepositoriesService) CompareCommits(ctx context.Context, owner, repo st
 	return comp, resp, nil
 }
 
+// CompareCommitsRaw compares a range of commits with each other in raw (diff or patch) format.
+//
+// Both "base" and "head" must be branch names in "repo".
+// To compare branches across other repositories in the same network as "repo",
+// use the format "<USERNAME>:branch".
+//
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/#compare-two-commits
+func (s *RepositoriesService) CompareCommitsRaw(ctx context.Context, owner, repo, base, head string, opts RawOptions) (string, *Response, error) {
+	u := fmt.Sprintf("repos/%v/%v/compare/%v...%v", owner, repo, base, head)
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return "", nil, err
+	}
+
+	switch opts.Type {
+	case Diff:
+		req.Header.Set("Accept", mediaTypeV3Diff)
+	case Patch:
+		req.Header.Set("Accept", mediaTypeV3Patch)
+	default:
+		return "", nil, fmt.Errorf("unsupported raw type %d", opts.Type)
+	}
+
+	var buf bytes.Buffer
+	resp, err := s.client.Do(ctx, req, &buf)
+	if err != nil {
+		return "", resp, err
+	}
+
+	return buf.String(), resp, nil
+}
+
 // ListBranchesHeadCommit gets all branches where the given commit SHA is the HEAD,
 // or latest commit for the branch.
 //
-// GitHub API docs: https://developer.github.com/v3/repos/commits/#list-branches-for-head-commit
+// GitHub API docs: https://docs.github.com/en/rest/reference/repos/#list-branches-for-head-commit
 func (s *RepositoriesService) ListBranchesHeadCommit(ctx context.Context, owner, repo, sha string) ([]*BranchCommit, *Response, error) {
 	u := fmt.Sprintf("repos/%v/%v/commits/%v/branches-where-head", owner, repo, sha)
 

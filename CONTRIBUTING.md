@@ -64,6 +64,9 @@ are more sensitive, emailed to <opensource@google.com>.
      messages are able to be formatted properly by various git tools.
 
   1. Finally, push the commits to your fork and submit a [pull request][].
+     **NOTE:** Please do not use force-push on PRs in this repo, as it makes
+     it more difficult for reviewers to see what has changed since the last
+     code review.
 
 [forking]: https://help.github.com/articles/fork-a-repo
 [golint]: https://github.com/golang/lint
@@ -84,10 +87,10 @@ where to put new methods.
 
 Code is organized in files also based pretty closely on the GitHub API
 documentation, following the format `{service}_{api}.go`. For example, methods
-defined at <https://developer.github.com/v3/repos/hooks/> live in
+defined at <https://docs.github.com/en/rest/reference/repos#webhooks> live in
 [repos_hooks.go][].
 
-[GitHub API documentation]: https://developer.github.com/v3/
+[GitHub API documentation]: https://docs.github.com/en/rest/reference/
 [repos_hooks.go]: https://github.com/google/go-github/blob/master/github/repos_hooks.go
 
 
